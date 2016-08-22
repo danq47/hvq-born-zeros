@@ -1,0 +1,106 @@
+X means that we don't need to modify the file (it was modified by POWHEG)
+C means we modified the file and copied it over from my work
+N means the original file has been updated in the newer POWHEG version
+so I updated the newer version of the file rather than
+just copying it straight over from my previous git
+
+######################################################
+#
+# Something is changing the output, I think it is one of the
+# POWHEG files that changed, so I will check them all.
+# 0 after X/N/C means no difference
+#
+######################################################
+
+
+X Only in /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/: .DS_Store
+
+X Files ../../Docs/ScalesSettings.txt and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/Docs/ScalesSettings.txt differ
+
+C Files ../../LesHouches.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/LesHouches.f differ
+
+X Only in /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/: W
+
+X0 Files ../../bbinit.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/bbinit.f differ
+
+X0 Files ../../boostrot.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/boostrot.f differ
+
+X0 Files ../../cernroutines.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/cernroutines.f differ
+
+X0 Files ../../find_regions.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/find_regions.f differ
+
+C Files ../../gen_index.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/gen_index.f differ
+
+N0 Files ../../gen_radiation.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/gen_radiation.f differ
+
+X Files ../../hvq/.DS_Store and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq/.DS_Store differ
+
+X Only in /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq: .gitignore
+
+C Files ../../hvq/Born.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq/Born.f differ
+
+C Files ../../hvq/Makefile and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq/Makefile differ
+
+C Only in /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq: pwhg_analysis-final.f
+
+C Only in /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq: pythia8
+
+C Files ../../hvq/real.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq/real.f differ
+
+C Files ../../hvq/setup-PYTHIA-lhef.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq/setup-PYTHIA-lhef.f differ
+
+X Only in /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq/testrun-tdec-lhc: clean.sh
+
+X Only in /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq/testrun-tdec-lhc: libpythia8.dylib
+
+X Only in /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq/testrun-tdec-lhc: many_runs.sh
+
+X Only in /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq/testrun-tdec-lhc: merge
+
+X Only in /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq/testrun-tdec-lhc: newgenplots.sh
+
+X Only in /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq/testrun-tdec-lhc: plots
+
+X Files ../../hvq/testrun-tdec-lhc/powheg.input and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq/testrun-tdec-lhc/powheg.input differ
+
+X Only in /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq/testrun-tdec-lhc: test.sh
+
+X Only in /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq: testrun-tdec-lhc2
+
+X Only in /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq: testrun-tdec-lhc3
+
+X Only in /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq: testrun-tdec-lhc4
+
+X Only in /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/hvq: testrun-tdec-lhc5
+
+C Files ../../include/LesHouches.h and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/include/LesHouches.h differ
+
+X0 Files ../../include/cgengrids.h and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/include/cgengrids.h differ
+
+N Files ../../include/pwhg_flg.h and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/include/pwhg_flg.h differ
+
+X Files ../../include/pwhg_par.h and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/include/pwhg_par.h differ
+
+N Files ../../include/pwhg_rad.h and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/include/pwhg_rad.h differ
+
+X0 Files ../../integrator.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/integrator.f differ
+
+C Files ../../lhefread.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/lhefread.f differ
+
+C Files ../../lhefwrite.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/lhefwrite.f differ
+
+X0 Files ../../maxrat.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/maxrat.f differ
+
+X0 Files ../../mint_upb.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/mint_upb.f differ
+
+X0 Files ../../pwhg_bookhist-multi-extra-new.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/pwhg_bookhist-multi-extra-new.f differ
+
+X0 Files ../../pwhg_bookhist-multi-new.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/pwhg_bookhist-multi-new.f differ
+
+X0 Files ../../pwhg_init.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/pwhg_init.f differ
+
+N0 Files ../../pwhg_main.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/pwhg_main.f differ
+
+X0 Files ../../pwhgreweight.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/pwhgreweight.f differ
+
+C Files ../../sigreal.f and /Users/Dan/code/POWHEG-BOX-dan/pwhg-testing/sigreal.f differ
