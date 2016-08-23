@@ -62,6 +62,9 @@ c
 c coll_check: 1 if we are near the collinear limit, and 0 if not.
 c Defined by [R(alr)-Rc(alr)]/R(alr) < \alpha_s (included in line 15 above)
 c
+c rsoft1(2): The soft limits of the Real matrix elements, used for calculating the
+c modified Sudakov form factor, given in EQ 4.1.5 in my report
+c
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       real * 8
@@ -77,7 +80,7 @@ c
 c DQ variables
 c
      9	  rhoweight,Bfact,Rfact,rhorweight(6),
-     &     ggbornplanar1,ggbornplanar2
+     &     ggbornplanar1,ggbornplanar2,rsoft1,rsoft2
 c
 c end DQ variables
 c
@@ -142,7 +145,7 @@ c
 c DQ variables
 c
      6     rhoweight,rhorweight,Bfact,Rfact,
-     7     ggbornplanar1,ggbornplanar2,
+     7     ggbornplanar1,ggbornplanar2,rsoft1,rsoft2,
 c
 c end DQ variables
 c

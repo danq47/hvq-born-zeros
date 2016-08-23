@@ -34,6 +34,11 @@ C
 C flg_remnant: .true. if the event is a remnant,
 C and .false. otherwise
 C
+C flg_b0_NLO: .true. - testing Born zeros.
+C
+C flg_rsoft: .true. means we use the soft limit of the planar
+C matrix elements, .false. means we use the usual (hard) MEs
+C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
       logical flg_nlotest,flg_withsubtr,flg_withdamp,flg_withreg,
@@ -51,7 +56,7 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
 C DQ flags
 C
-     2     flg_newsuda,flg_remnant,
+     2     flg_newsuda,flg_remnant,flg_b0_NLO,flg_rsoft,
 C
 C End DQ flags
 C
@@ -74,7 +79,7 @@ C
 C
 C DQ flags
 C
-     4     flg_newsuda,flg_remnant,
+     4     flg_newsuda,flg_remnant,flg_b0_NLO,flg_rsoft,
 C
 C End DQ flags
 C
