@@ -30,28 +30,30 @@ c  pwhgfill  :  fills the histograms with data
 
       call inihists
 
-      do j = 1,6
+      do j = 1,3
       	if(j.eq.1) then
       		prefix1 = '-incl'
       	elseif(j.eq.2) then
       		prefix1 = '-str'
       	elseif(j.eq.3) then
       		prefix1 = '-unstr'
-         elseif(j.eq.4) then
-            prefix1 = '-vstr'
-         elseif(j.eq.5) then
-            prefix1 = '-vunstr'
-         else
-      		prefix1 = '-qqb'
+C          elseif(j.eq.4) then
+C             prefix1 = '-vstr'
+C          elseif(j.eq.5) then
+C             prefix1 = '-vunstr'
+C          else
+C       		prefix1 = '-qqb'
       	endif
       	
-      	do l=1,3
+      	do l=1,2
       		if(l.eq.1) then
       			prefix2 = '-no-cuts'
-      		elseif(l.eq.2) then
-      			prefix2 = '-wa'
-      		elseif(l.eq.3) then
-      			prefix2 = '-coll'
+            else
+               prefix2 = '-gg'
+C       		elseif(l.eq.2) then
+C       			prefix2 = '-wa'
+C       		elseif(l.eq.3) then
+C       			prefix2 = '-coll'
       		endif
 
          	l1=lenocc(prefix1)
@@ -73,6 +75,14 @@ c  pwhgfill  :  fills the histograms with data
 
       	enddo
       enddo
+
+c      call bookupeqbins('pT-j1-2GeV',2d0,0d0,500d0)
+c      call bookupeqbins('pT-j1-5GeV',5d0,0d0,1000d0)
+c      call bookupeqbins('pT-j1-10GeV',10d0,0d0,1500d0)
+c      call bookupeqbins('pT-j1-50GeV',50d0,0d0,2000d0)
+c      call bookupeqbins('pT-j1-200GeV',200d0,0d0,3000d0)
+
+
       end
 
       subroutine analysis(dsig0)
@@ -82,19 +92,13 @@ c  pwhgfill  :  fills the histograms with data
       include 'LesHouches.h'
       include 'nlegborn.h'
       include 'pwhg_rad.h'
-      include 'pwhg_weights.h'   ! KH added 17/8/16
       character * 6 whcprg      
       common/cwhcprg/whcprg
       integer jpref
       character * 20 prefix1,prefix2,prefix3
       common/ccccprefix/jpref
       data whcprg/'NLO   '/
-      real * 8  dsig0            ! KH added 17/8/16
-      real * 8  dsig(7)          ! KH added 17/8/16
-      integer   nweights         ! KH added 17/8/16
-      logical   iniwgts          ! KH added 17/8/16
-      data      iniwgts/.true./  ! KH added 17/8/16
-      save      iniwgts          ! KH added 17/8/16
+      real * 8  dsig0,dsig
       logical   ini
       data      ini/.true./
       save      ini
@@ -130,39 +134,13 @@ c  pwhgfill  :  fills the histograms with data
       integer ngenerations,inotfound,iprodrad
       common/cngenerations/ngenerations
       integer id1,id2
+      real*8 random,rweight
+      external random
+
       ngenerations = powheginput("#ngenerations")
       if(ngenerations.lt.0) ngenerations = 4
 
-C - KH - 17/8/16 - added block from here ...
-      if (iniwgts) then
-         write(*,*) '*********************'
-         if(whcprg.eq.'NLO') then
-            write(*,*) ' NLO ANALYSIS      '
-            weights_num=0
-         elseif(WHCPRG.eq.'LHE   ') then
-            write(*,*) ' LHE ANALYSIS      '
-         elseif(WHCPRG.eq.'HERWIG') then
-            write(*,*) ' HERWIG ANALYSIS   '
-         elseif(WHCPRG.eq.'PYTHIA') then
-            write(*,*) ' PYTHIA ANALYSIS   '
-         endif
-         write(*,*) '*********************'
-         if(weights_num.eq.0) then
-            call setupmulti(1)
-         else
-            call setupmulti(weights_num)
-         endif
-         iniwgts=.false.
-      endif
-
-      dsig=0
-      if(weights_num.eq.0) then
-         dsig(1)=dsig0
-      else
-         dsig(1:weights_num)=weights_val(1:weights_num)
-      endif
-      if(sum(abs(dsig)).eq.0) return
-C - KH - 17/8/16 - down to here ; copied from DYNNLOPS's pwhg_analysis-minlo.f
+      dsig  = dsig0
 
       i_top = 0
       i_atop = 0
@@ -253,41 +231,43 @@ c Analysis - make the cuts
 
       if(whcprg.eq.'NLO') rho=rho_idx
 
-      do jxx = 1,6
+      do jxx = 1,3
 
       	condition1 = .false.
 
       	if(jxx.eq.1) then
       		prefix1='-incl'
       		condition1 = .true.
+            counter1=counter1+1
         	elseif(jxx.eq.2) then
       		prefix1='-str'
             if((rho.eq.1.and.deltay.lt.0).or.(rho.eq.2.and.deltay.gt.0)) then
       			condition1 = .true.
+               counter2=counter2+1
       		endif
       	elseif(jxx.eq.3) then
       		prefix1='-unstr'
             if((rho.eq.1.and.deltay.gt.0).or.(rho.eq.2.and.deltay.lt.0)) then
       			condition1 = .true.
       		endif
-      	elseif(jxx.eq.4) then
-            prefix1='-vstr'
-            if((rho.eq.1.and.deltay.lt.-2).or.(rho.eq.2.and.deltay.gt.2)) then
-               condition1 = .true.
-            endif
-         elseif(jxx.eq.5) then
-            prefix1='-vunstr'
-            if((rho.eq.1.and.deltay.gt.-2).or.(rho.eq.2.and.deltay.lt.2)) then
-               condition1 = .true.
-            endif
-         elseif(jxx.eq.6) then
-      		prefix1='-qqb'
-      		if(rho.gt.2) then
-      			condition1 = .true.
-      		endif
+C       	elseif(jxx.eq.4) then
+C             prefix1='-vstr'
+C             if((rho.eq.1.and.deltay.lt.-2).or.(rho.eq.2.and.deltay.gt.2)) then
+C                condition1 = .true.
+C             endif
+C          elseif(jxx.eq.5) then
+C             prefix1='-vunstr'
+C             if((rho.eq.1.and.deltay.gt.-2).or.(rho.eq.2.and.deltay.lt.2)) then
+C                condition1 = .true.
+C             endif
+C          elseif(jxx.eq.6) then
+C       		prefix1='-qqb'
+C       		if(rho.gt.2) then
+C       			condition1 = .true.
+C       		endif
       	endif
 
-      	do lxx=1,3
+      	do lxx=1,2
 
       		condition2 = .false.
 
@@ -296,20 +276,27 @@ c Analysis - make the cuts
       			if(ptj1.gt.0) then 	! Making sure there is a jet
       				condition2 = .true.
       			endif
-      		elseif(lxx.eq.2) then
-      			prefix2 = '-wa'   ! These cuts don't work as the radiation which is generated could be generated by the old AND new sudakov in the veto algorithm
-      			if(ptj1.gt.0) then
-                  if(coll.eq.0) then
-         				condition2 = .true.
+            elseif(lxx.eq.2) then
+               prefix2 = '-gg'
+               if(ptj1.gt.0) then
+                  if(id1.eq.0.and.id2.eq.0) then
+                     condition2 = .true.
                   endif
-      			endif
-      		elseif(lxx.eq.3) then
-      			prefix2 = '-coll'
-      			if(ptj1.gt.0) then
-                  if(coll.eq.1) then
-      					condition2 = .true.
-      				endif
-      			endif
+               endif
+C       		elseif(lxx.eq.2) then
+C       			prefix2 = '-wa'   ! These cuts don't work as the radiation which is generated could be generated by the old AND new sudakov in the veto algorithm
+C       			if(ptj1.gt.0) then
+C                   if(sw.eq.0) then
+C          				condition2 = .true.
+C                   endif
+C       			endif
+C       		elseif(lxx.eq.3) then
+C       			prefix2 = '-coll'
+C       			if(ptj1.gt.0) then
+C                   if(sw.eq.1) then
+C       					condition2 = .true.
+C       				endif
+C       			endif
       		endif
 
       		l1=lenocc(prefix1)
@@ -332,9 +319,62 @@ c Analysis - make the cuts
                   call filld('pT-j1-200GeV'//prefix1(1:l1)//prefix2(1:l2),ptj1,dsig)
                endif
             endif
-
       	enddo
       enddo
+
+C       write(24,*) 'total events:', counter1
+C       write(24,*) 'stretched events:', counter2
+C       write(24,*) 'stretched percentage:', (100.0 * counter2)/(1.0*counter1)
+!      counter1=counter1+1
+C       if(powheginput('#dan_flag').eq.1d0) then  ! stretched
+C C          rweight = min(ggbornplanar1,ggbornplanar2)/(ggbornplanar1+ggbornplanar2)
+C C          if(random().lt.rweight) then
+C C             counter2=counter2+1
+C             if(id1.eq.0.and.id2.eq.0) then
+C                call filld('pT-j1-2GeV',ptj1,dsig)
+C                call filld('pT-j1-5GeV',ptj1,dsig)
+C                call filld('pT-j1-10GeV',ptj1,dsig)
+C                call filld('pT-j1-50GeV',ptj1,dsig)
+C                call filld('pT-j1-200GeV',ptj1,dsig)
+C             endif
+C C          else
+C C             if(id1.eq.0.and.id2.eq.0) then
+C C                call filld('pT-j1-2GeV',0d0,dsig)
+C C                call filld('pT-j1-5GeV',0d0,dsig)
+C C                call filld('pT-j1-10GeV',0d0,dsig)
+C C                call filld('pT-j1-50GeV',0d0,dsig)
+C C                call filld('pT-j1-200GeV',0d0,dsig)
+C C             endif
+C C          endif
+C       elseif(powheginput('#dan_flag').eq.2d0) then  ! unstretched
+C C          rweight = max(ggbornplanar1,ggbornplanar2)/(ggbornplanar1+ggbornplanar2)
+C C          if(random().lt.rweight) then
+C C             counter2=counter2+1
+C             if(id1.eq.0.and.id2.eq.0) then
+C                call filld('pT-j1-2GeV',ptj1,dsig)
+C                call filld('pT-j1-5GeV',ptj1,dsig)
+C                call filld('pT-j1-10GeV',ptj1,dsig)
+C                call filld('pT-j1-50GeV',ptj1,dsig)
+C                call filld('pT-j1-200GeV',ptj1,dsig)
+C             endif
+C C          else
+C C             if(id1.eq.0.and.id2.eq.0) then
+C C                call filld('pT-j1-2GeV',0d0,dsig)
+C C                call filld('pT-j1-5GeV',0d0,dsig)
+C C                call filld('pT-j1-10GeV',0d0,dsig)
+C C                call filld('pT-j1-50GeV',0d0,dsig)
+C C                call filld('pT-j1-200GeV',0d0,dsig)
+C C             endif
+C C          endif
+C       else
+C          if(id1.eq.0.and.id2.eq.0) then
+C             call filld('pT-j1-2GeV',ptj1,dsig)
+C             call filld('pT-j1-5GeV',ptj1,dsig)
+C             call filld('pT-j1-10GeV',ptj1,dsig)
+C             call filld('pT-j1-50GeV',ptj1,dsig)
+C             call filld('pT-j1-200GeV',ptj1,dsig)
+C          endif
+C       endif
 
       end
 
@@ -624,46 +664,4 @@ C --------------------------------------------------------------------- C
       sonofhep = .false.
       end
 
-
-! KH - 17/8/16 - added the routines below as they are being called by
-! the main-PYTHIA8.f code. They were added purely for this reason. I
-! have no clue as to the physics behind doing it. More importantly,
-! more generally, I have no idea what the main-PYTHIA8 and pythia8F77.cc
-! are doing. 
-      subroutine boost2reson4(pres,nm,pin,pout)
-      implicit none
-      integer nm
-      real * 8 pres(4),pin(4,nm),pout(4,nm)
-      real * 8 vec(3),beta
-      beta=sqrt(pres(1)**2+pres(2)**2+pres(3)**2)/pres(4)
-      vec(1)=pres(1)/(beta*pres(4))
-      vec(2)=pres(2)/(beta*pres(4))
-      vec(3)=pres(3)/(beta*pres(4))
-      call mboost4(nm,vec,-beta,pin,pout)
-      end
-
-
-      
-      subroutine mboost4(m,vec,beta,vin,vout)
-c     boosts the m vectors vin(4,m) into the vectors vout(4,m) (that can
-c     be the same) in the direction of vec(3) (|vec|=1) with velocity
-c     beta.  Lorents convention: (t,x,y,z).
-      implicit none
-      integer m
-      real * 8 vec(3),beta,vin(4,m),vout(4,m)
-      real * 8 betav,gamma
-      real * 8 vdotb
-      integer ipart,idim
-      gamma=1/sqrt(1-beta**2)
-      do ipart=1,m
-         vdotb=vin(1,ipart)*vec(1)
-     #         +vin(2,ipart)*vec(2)+vin(3,ipart)*vec(3)
-         do idim=1,3
-            vout(idim,ipart)=vin(idim,ipart)
-     #           +vec(idim)*((gamma-1)*vdotb
-     #           +gamma*beta*vin(4,ipart))
-         enddo
-         vout(4,ipart)=gamma*(vin(4,ipart)+vdotb*beta)
-      enddo
-      end
 
