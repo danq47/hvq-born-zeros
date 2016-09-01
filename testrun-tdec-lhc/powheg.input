@@ -1,3 +1,21 @@
+
+############################
+
+# TESTING FLAGS ADDED BY DQ
+
+btlscalereal 1 ! Allows us to use the real scale to compute the renormalisation scale
+
+# NLO plots
+b0NLO 0 ! Use modified matrix elements for the NLO calculation =1, or old matrix elements =0
+dan_flag 0 ! 0 = total, 1 = stretched, 2 = unstretched matrix elements
+rsoft 0
+############################ 
+
+testplots 1
+
+
+
+
 newsuda 0 ! 1 for new Sudakov, 0 for old
 iseed 1
                    ! It generates the call RM48IN(352345,0,0) (see the RM48 manual).
