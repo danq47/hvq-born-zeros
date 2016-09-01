@@ -59,17 +59,19 @@ c (iv-vii) 1-4th hardest jets.
 !	         	call bookupeqbins(prefix2(1:l2)//'_pt_10GeV'//prefix1(1:l1),10d0,0d0,1000d0)
 !	         	call bookupeqbins(prefix2(1:l2)//'_pt_50GeV'//prefix1(1:l1),50d0,0d0,1000d0)
 	         elseif(j.eq.3) then
-	         	call bookupeqbins(prefix2(1:l2)//'_pt_2GeV'//prefix1(1:l1),2d0,10d0,500d0)
+	         	call bookupeqbins(prefix2(1:l2)//'_pt_2GeV'//prefix1(1:l1),2d0,0d0,500d0)
 !	         	call bookupeqbins(prefix2(1:l2)//'_pt_5GeV'//prefix1(1:l1),5d0,10d0,500d0)
-	         	call bookupeqbins(prefix2(1:l2)//'_pt_10GeV'//prefix1(1:l1),10d0,10d0,1500d0)
+	         	call bookupeqbins(prefix2(1:l2)//'_pt_10GeV'//prefix1(1:l1),10d0,0d0,1000d0)
 !	         	call bookupeqbins(prefix2(1:l2)//'_pt_50GeV'//prefix1(1:l1),50d0,50d0,1000d0)
 	         else
-	         	call bookupeqbins(prefix2(1:l2)//'_pt_2GeV'//prefix1(1:l1),2d0,0d0,250d0)
+	         	call bookupeqbins(prefix2(1:l2)//'_pt_2GeV'//prefix1(1:l1),1d0,0d0,100d0)
 	         endif
-	         if(j.le.2) then
-	         	call bookupeqbins(prefix2(1:l2)//'_mass'//prefix1(1:l1),5d0,150d0,750d0)
+	         if(j.eq.1) then
+	         	call bookupeqbins(prefix2(1:l2)//'_mass'//prefix1(1:l1),1d0,140d0,200d0)
+	         elseif(j.eq.2) then
+	         	call bookupeqbins(prefix2(1:l2)//'_mass'//prefix1(1:l1),4d0,200d0,1000d0)
 	        	else
-	        		call bookupeqbins(prefix2(1:l2)//'_mass'//prefix1(1:l1),5d0,0d0,350d0)
+	        		call bookupeqbins(prefix2(1:l2)//'_mass'//prefix1(1:l1),0.5d0,0d0,100d0)
 	        	endif
 	      enddo
 
@@ -108,11 +110,11 @@ c Analysis subroutine
 		integer   ixx,jxx,kxx,lxx,j 	! loop indices
 ! particle id numbers for identifying them in the event record
 		integer 	 i_top,i_atop,i_bfromtop,i_abfromatop
-		integer	 i_bjet,i_abjet
+		integer	 i_bjet,i_abjet,i_jet
 		integer 	 bhadfromtop,bhadfromatop
 		integer   jet_position(10),tmp(10)
 c particle momenta
-		real * 8  p_top(4),p_tb(4),p_b(4),p_bb(4),p_hist(4)
+		real * 8  p_top(4),p_tb(4),p_b(4),p_bb(4),p_hist(4),p_jet(4)
 c particle observables
 		real * 8  y,eta,pt,mass,mttbar,yttbar,ptttbar,
      1          ptbhadfromtop,ptbhadfromatop,y_t,y_tb,deltay
@@ -120,7 +122,7 @@ c Fastjet stuff
 		integer   maxtracks,maxjets
 		parameter (maxtracks=nmxhep,maxjets=20)
 		integer mjets,jetvec(maxtracks),in_jet,
-     1        ngenerations,sonofid,binhadron
+     1        ngenerations,ngen0,sonofid,binhadron
 		logical   isForClustering(maxtracks),isbhadron
 		external sonofid,binhadron,isbhadron,in_jet
 		common/cngenerations/ngenerations
@@ -134,7 +136,9 @@ c names for the histograms
 		integer lenocc
 		external lenocc
 
-		ngenerations = 4 	! parameter used in sonofhep
+		ngen0 = 0						! ngenerations is used in sonofhep to find which parton
+  10	continue							! the particle is descended from. If we don't find a bjet,
+		ngenerations = 4 + ngen0	! we come back here and search again, with more generations
 
 C - KH - 17/8/16 - added block from here ...
 		if (iniwgts) then
@@ -179,6 +183,8 @@ c Initialise all numbers as 0
 		IsForClustering = .false.
 		jet_position(1:10) = 0
 		tmp(1:10) = 0
+		i_jet = 0
+		p_jet(4) = 0
 
 c Find the tops (and the bs that they decay into) 
 c from the event record
@@ -193,6 +199,18 @@ c from the event record
 					if(idhep(jhep).eq.-5) i_abfromatop = jhep		! b~
 				endif
 			endif
+! Select jets in the NLO and LHEF case so that we don't use Fastjet
+         if(whcprg.eq.'NLO') then
+            if(jhep.gt.2) then ! If it's a final state parton
+               if(abs(idhep(jhep)).lt.6.or.idhep(jhep).eq.21) then
+                  i_jet = jhep
+               endif
+            endif
+         elseif(whcprg.eq.'LHE') then
+            i_jet = 5
+         else
+         	i_jet = 0
+         endif
 c for jets, using only final state particles excluding leptons
          if(isthep(jhep).eq.1.and.(id.lt.11.or.id.gt.16)) then
             IsForClustering(jhep) = .true.
@@ -201,56 +219,83 @@ c for jets, using only final state particles excluding leptons
          endif
       enddo
 
-c Call Fastjet to build jets
-      mjets = maxjets
-      call buildjets(mjets,j_kt,j_eta,j_rap,j_phi,j_p,jetvec,
-     1     isForClustering)
+c Call Fastjet to build jets for PYTHIA case
+      if(whcprg.ne.'NLO'.and.whcprg.ne.'LHE') then
+      	mjets = maxjets
+      	call buildjets(mjets,j_kt,j_eta,j_rap,j_phi,j_p,jetvec,
+     1     	isForClustering)
+      endif
 
+      if(whcprg.ne.'NLO'.and.whcprg.ne.'LHE') then
 c Find the b hadrons
-     	bhadfromtop = 0
-      bhadfromatop = 0
-      ptbhadfromtop = 0
-      ptbhadfromatop = 0
+     		bhadfromtop = 0
+      	bhadfromatop = 0
+      	ptbhadfromtop = 0
+      	ptbhadfromatop = 0
 c copied from ttb_NLO_dec
-      do j=1,nhep
-         if(IsForClustering(j).and.isbhadron(idhep(j))) then
-            if(binhadron(idhep(j)).eq.5) then ! is it a b or b~?
+      	do j=1,nhep
+         	if(IsForClustering(j).and.isbhadron(idhep(j))) then
+            	if(binhadron(idhep(j)).eq.5) then ! is it a b or b~?
 ! Look for hardest (largest pt) hadron with a b quark content.
 ! Store in bhadfromtop, ptbhadfromtop
-                if(bhadfromtop.ne.0) then
-c                  write(*,*) ' a top with more than one b son'
-                  call getyetaptmass(phep(1:4,j),y,eta,pt,mass)
-                  if(pt.gt.ptbhadfromtop) then
-                     bhadfromtop = j
-                     ptbhadfromtop = pt
-                  endif
-               else
-                  bhadfromtop = j
-                  call getyetaptmass(phep(1:4,j),y,eta,pt,mass)
-                  ptbhadfromtop = pt
-               endif
-            elseif(binhadron(idhep(j)).eq.-5) then
+                	if(bhadfromtop.ne.0) then
+c                 	 write(*,*) ' a top with more than one b son'
+                  	call getyetaptmass(phep(1:4,j),y,eta,pt,mass)
+                  	if(pt.gt.ptbhadfromtop) then
+                     	bhadfromtop = j
+                     	ptbhadfromtop = pt
+            	      endif
+               	else
+                  	bhadfromtop = j
+                  	call getyetaptmass(phep(1:4,j),y,eta,pt,mass)
+                  	ptbhadfromtop = pt
+               	endif
+            	elseif(binhadron(idhep(j)).eq.-5) then
 c same for bbar
-               if(bhadfromatop.ne.0) then
-c                  write(*,*) ' a top with more than one b son'
-                  call getyetaptmass(phep(1:4,j),y,eta,pt,mass)
-                  if(pt.gt.ptbhadfromatop) then
-                     bhadfromatop = j
-                     ptbhadfromatop = pt
-                  endif
-               else
-                  bhadfromatop = j
-                  call getyetaptmass(phep(1:4,j),y,eta,pt,mass)
-                  ptbhadfromatop = pt
-               endif
-            endif
-         endif
-      enddo
+      	         if(bhadfromatop.ne.0) then
+c        	          write(*,*) ' a top with more than one b son'
+            	      call getyetaptmass(phep(1:4,j),y,eta,pt,mass)
+               	   if(pt.gt.ptbhadfromatop) then
+                  	   bhadfromatop = j
+                     	ptbhadfromatop = pt
+            	      endif
+               	else
+                  	bhadfromatop = j
+                  	call getyetaptmass(phep(1:4,j),y,eta,pt,mass)
+                  	ptbhadfromatop = pt
+               	endif
+            	endif
+         	endif
+      	enddo
 
 c Figure out which jets came from the b's i.e. which contain b hadrons
-      i_bjet = in_jet(bhadfromtop,jetvec)
-      i_abjet = in_jet(bhadfromatop,jetvec)
+      	i_bjet = in_jet(bhadfromtop,jetvec)
+      	i_abjet = in_jet(bhadfromatop,jetvec)
+      	if(i_bjet.eq.0.or.i_abjet.eq.0) then ! go back to the beginning of the 
+      		ngen0=ngen0+1							  ! analysis and search again
+      		goto 10									  ! with an increased ngenerations
+      	endif
 
+c Find the hardest jets that are not b jets
+      	do ixx=1,6
+      		tmp(ixx)=ixx 			! temporary array
+      		jet_position(ixx)=0
+      		if(i_bjet.eq.ixx.or.i_abjet.eq.ixx) then
+      			tmp(ixx)=0			! delete the position of the b jets
+      		endif
+      	enddo
+
+	      jxx=0 						
+   	   do ixx=1,4					
+ 100			continue
+      		if(tmp(ixx+jxx).ne.0) then
+      			jet_position(ixx)=ixx+jxx
+      		else
+      			jxx=jxx+1
+      			goto 100
+      		endif				! jet_position(n) now contains
+      	enddo					! the n-th hardest non-b jet
+      endif
 C       do ixx=1,10
 C       	if(j_kt(ixx).gt.0) then
 C       		if(i_bjet.eq.ixx) write(23,*) j_kt(ixx),'b jet'
@@ -258,37 +303,16 @@ C       		if(i_abjet.eq.ixx) write(23,*) j_kt(ixx),'b~ jet'
 C       		if(i_bjet.ne.ixx.and.i_abjet.ne.ixx) write(23,*) j_kt(ixx)
 C       	endif
 C       enddo
+C       write(23,*) 'b jet:',i_bjet
+C       write(23,*) 'b~ jet:',i_abjet
 C       write(23,*)
 
-      id1=idhep(1)
-      id2=idhep(2)
-      if(id1.eq.21) id1=0
-      if(id2.eq.21) id2=0
-
+c Declare the momenta that will be used in the analysis
       p_top=phep(1:4,i_top)
       p_tb=phep(1:4,i_atop)
-      p_b=phep(1:4,i_bfromtop)
-      p_bb=phep(1:4,i_abfromatop)
-
-c Find the hardest jets that are not b jets
-      do ixx=1,6
-      	tmp(ixx)=ixx 			! temporary array
-      	jet_position(ixx)=0
-      	if(i_bjet.eq.ixx.or.i_abjet.eq.ixx) then
-      		tmp(ixx)=0			! delete the position of the b jets
-      	endif
-      enddo
-
-      jxx=0 						
-      do ixx=1,4					
- 100		continue
-      	if(tmp(ixx+jxx).ne.0) then
-      		jet_position(ixx)=ixx+jxx
-      	else
-      		jxx=jxx+1
-      		goto 100
-      	endif				! jet_position(n) now contains
-      enddo					! the n-th hardest non-b jet
+C       p_b=phep(1:4,i_bfromtop)
+C       p_bb=phep(1:4,i_abfromatop)
+      p_jet=phep(1:4,i_jet)
 
 c calculate kinematic quantities needed for stretched/unstretched spectra
       call getyetaptmass(p_top,y,eta,pt,mass)
@@ -298,7 +322,7 @@ c calculate kinematic quantities needed for stretched/unstretched spectra
       deltay = y_t - y_tb
 c Fill histograms - make the cuts
 
-      do ixx = 1,3
+      do ixx = 1,4
 
       	condition1 = .false.
 
@@ -332,6 +356,9 @@ C       			condition1 = .true.
 C       		endif
       	else
       		prefix1='-gg'
+      		if(rho.lt.3) then
+      			condition1 = .true.
+      		endif
       	endif      
 
       	do jxx=1,6	
@@ -349,20 +376,38 @@ C       		endif
 	            condition2 = .true.
 	         elseif(jxx.eq.3) then
 	         	prefix2 = 'j1'
-	          	p_hist = j_p(1:4,jet_position(1))
+	         	if(whcprg.eq.'NLO'.or.whcprg.eq.'LHE') then
+	         		p_hist = p_jet
+	         	else
+	         		if(jet_position(1).ne.0) then	
+	          			p_hist = j_p(1:4,jet_position(1))
+	          		endif
+	          	endif
 	            condition2 = .true.
-	         elseif(jxx.eq.4) then
+	         elseif(jxx.eq.4) then ! jets 2-4 don't exist for LHE or NLO
 	         	prefix2 = 'j2'
-	         	p_hist = j_p(1:4,jet_position(2))
-	            condition2 = .true.
+	         	if(whcprg.ne.'NLO'.and.whcprg.ne.'LHE') then
+	         		if(jet_position(2).ne.0) then
+	         			p_hist = j_p(1:4,jet_position(2))
+	            		condition2 = .true.
+	            	endif
+	            endif
 	         elseif(jxx.eq.5) then
 	         	prefix2 = 'j3'
-	         	p_hist = j_p(1:4,jet_position(3))
-	            condition2 = .true.
+	         	if(whcprg.ne.'NLO'.and.whcprg.ne.'LHE') then
+	         		if(jet_position(3).ne.0) then
+		         		p_hist = j_p(1:4,jet_position(3))
+		            	condition2 = .true.
+	   	         endif
+	      		endif
 	         elseif(jxx.eq.6) then
 	         	prefix2 = 'j4'
-	         	p_hist = j_p(1:4,jet_position(4))
-	            condition2 = .true.
+	         	if(whcprg.ne.'NLO'.and.whcprg.ne.'LHE') then
+	         		if(jet_position(4).ne.0) then
+		         		p_hist = j_p(1:4,jet_position(4))
+		            	condition2 = .true.
+	   	         endif
+	      		endif
 	         endif	
 
 	         l1=lenocc(prefix1)
@@ -381,17 +426,25 @@ C       		endif
 	      	   if(jxx.eq.3) then
 	         		call filld(prefix2(1:l2)//'_pt_10GeV'//prefix1(1:l1),pt,dsig)
 	         	endif
-	         	call filld(prefix2(1:l2)//'_mass'//prefix1(1:l1),mass,dsig)	
+	         	if(jxx.lt.3) then
+	         		call filld(prefix2(1:l2)//'_mass'//prefix1(1:l1),mass,dsig)
+	         	else
+	         		if(whcprg.ne.'LHE') then ! no point plotting mass for a gluon/jets that don't exist
+	         			call filld(prefix2(1:l2)//'_mass'//prefix1(1:l1),mass,dsig)
+	         		endif
+	         	endif
 	         endif
 c jet rapidities in the centre of mass frame
 	         if(jxx.eq.1) then
 		      	do j=1,3
 		     			if(j.eq.1) prefix3='1'
-	   	  			if(j.eq.2) prefix3='2'
-	     				if(j.eq.3) prefix3='3'
-	     				if(j_kt(jet_position(j)).gt.0) then
-	     					call filld('yj'//prefix3(1:1)//'_minus_yttb'//prefix1(1:l1),
-     1         		j_rap(jet_position(j)) - yttbar,dsig)
+		     			if(whcprg.ne.'NLO'.and.whcprg.ne.'LHE') then
+	   	  				if(j.eq.2) prefix3='2'
+	     					if(j.eq.3) prefix3='3'
+	     					if(j_kt(jet_position(j)).gt.0) then
+	     						call filld('yj'//prefix3(1:1)//'_minus_yttb'//prefix1(1:l1),
+     1         			j_rap(jet_position(j)) - yttbar,dsig)
+	      				endif
 	      			endif
 	      		enddo	
 	      	endif
@@ -474,22 +527,25 @@ C       parameter (maxtracks=nmxhep,maxjets=nmxhep) ! <- think this is a mistake
       logical   isForClustering(maxtracks)
       real * 8  ptrack(4,maxtracks),pj(4,maxjets)
       integer   jetvec(maxtracks),itrackhep(maxtracks)
-      integer   ntracks,njets
-      integer   j,k,mu
+      integer   ntracks,njets,tmp1(maxtracks)
+      integer   j,k,mu,ixx
       real * 8  r,palg,ptmin,pp,tmp
       integer sonofid
       external sonofid
 C - Initialize arrays and counters for output jets
-      ptrack = 0
-      jetvec = 0
       ntracks=0
-      pj = 0
       kt=0
       eta=0
       rap=0
       phi=0
       pjet=0
-      jetvechep=0
+      do ixx=1,maxtracks
+      	ptrack(:,ixx)=0
+      	jetvec(ixx)=0
+      	pj(:,ixx)=0
+      	jetvechep(ixx)=0
+      	tmp1(ixx)=0
+      enddo
 C - Extract final state particles to feed to jet finder
       do j=1,nhep
          if(.not.isForClustering(j)) cycle
@@ -513,18 +569,29 @@ C - R = 0.7   radius parameter
 C - f = 0.75  overlapping fraction
       palg  = -1
       r     = 0.7d0
-      ptmin = 10d0
+      ptmin = 0d0
       call fastjetppgenkt(ptrack,ntracks,r,palg,ptmin,pjet,njets,jetvec)
       mjets=min(mjets,njets)
       if(njets.eq.0) return
 c check consistency
-      do k=1,ntracks
-         if(jetvec(k).gt.0) then
+C       do k=1,ntracks
+C          if(jetvec(k).gt.0) then
+C             do mu=1,4
+C                pj(mu,jetvec(k))=pj(mu,jetvec(k))+ptrack(mu,k)
+C             enddo
+C          endif
+C       enddo
+      do ixx=1,size(jetvec)		! DQ - for some reason, once inside the k=1,ntracks loop
+      	tmp1(ixx)=jetvec(ixx)	! below, jetvec was giving wrong results, however, outside 
+      enddo								! the loop it was OK so I have just copied the items in 
+      do k=1,ntracks					! the array jetvec into tmp1 and used that inside the loop instead
+         if(tmp1(k).gt.0) then
             do mu=1,4
-               pj(mu,jetvec(k))=pj(mu,jetvec(k))+ptrack(mu,k)
+               pj(mu,tmp1(k))=pj(mu,tmp1(k))+ptrack(mu,k)
             enddo
          endif
       enddo
+
       tmp=0
       do j=1,mjets
          do mu=1,4
@@ -546,7 +613,8 @@ C --------------------------------------------------------------------- C
       enddo
       jetvechep = 0
       do j=1,ntracks
-         jetvechep(itrackhep(j))=jetvec(j)
+C          jetvechep(itrackhep(j))=jetvec(j)
+      	jetvechep(itrackhep(j))=tmp1(j)	! same as above, just renaming the jetvec
       enddo
       end
 

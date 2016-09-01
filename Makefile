@@ -9,7 +9,7 @@ PDF=lhapdf
 #Choose Analysis: none, B-or-D, top
 ## default analysis may require FASTJET package, that has to be installed separately (see below)
 #ANALYSIS=new
-ANALYSIS=final
+ANALYSIS=ttbar
 #ANALYSIS=B-or-D
 ## For static linking uncomment the following
 #STATIC= -static
